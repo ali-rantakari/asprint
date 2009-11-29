@@ -165,11 +165,6 @@ int main(int argc, char *argv[])
 		HGPrintfErr(@"Error: provided path does not exist:\n%s\n\n", [providedPath UTF8String]);
 		exit(1);
 	}
-	if (![[providedPath pathExtension] isEqualToString:@"scpt"])
-	{
-		HGPrintfErr(@"Error: specified filename does not have extension: .scpt\n\n");
-		exit(1);
-	}
 	
 	
 	NSURL *fileURL = [NSURL fileURLWithPath:providedPath];
