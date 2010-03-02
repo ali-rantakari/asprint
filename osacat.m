@@ -27,6 +27,11 @@ under the License.
 #import <libgen.h>
 #import "ANSIEscapeHelper.h"
 
+#define MUTABLE_ATTR_STR(x)				[[[NSMutableAttributedString alloc] initWithString:(x)] autorelease]
+#define ATTR_STR(x)						[[[NSAttributedString alloc] initWithString:(x)] autorelease]
+#define WHITESPACE(x)					[@"" stringByPaddingToLength:(x) withString:@" " startingAtIndex:0]
+
+
 const int VERSION_MAJOR = 0;
 const int VERSION_MINOR = 5;
 const int VERSION_BUILD = 0;
@@ -95,6 +100,30 @@ void PrintfErr(NSString *aStr, ...)
 }
 
 
+// replaces all occurrences of searchStr in str with replaceStr
+void replaceInMutableAttrStr(NSMutableAttributedString *str, NSString *searchStr, NSAttributedString *replaceStr)
+{
+	if (str == nil || searchStr == nil || replaceStr == nil)
+		return;
+	
+	NSUInteger replaceStrLength = [replaceStr length];
+	NSString *strRegularString = [str string];
+	NSRange searchRange = NSMakeRange(0, [strRegularString length]);
+	NSRange foundRange;
+	do
+	{
+		foundRange = [strRegularString rangeOfString:searchStr options:NSLiteralSearch range:searchRange];
+		if (foundRange.location != NSNotFound)
+		{
+			[str replaceCharactersInRange:foundRange withAttributedString:replaceStr];
+			
+			strRegularString = [str string];
+			searchRange.location = foundRange.location + replaceStrLength;
+			searchRange.length = [strRegularString length] - searchRange.location;
+		}
+	}
+	while (foundRange.location != NSNotFound);
+}
 
 
 
@@ -107,13 +136,15 @@ int main(int argc, char *argv[])
 	{
 		Printf(@"usage: %s [options] <file>\n", myBasename);
 		Printf(@"\n");
-		Printf(@"  Prints out the contents of an AppleScript\n");
-		Printf(@"  file.\n");
+		Printf(@"  Prints out the contents of an AppleScript file.\n");
 		Printf(@"\n");
 		Printf(@" options:\n");
 		Printf(@"\n");
 		Printf(@"  -f  Don't use ANSI escape sequences for\n");
 		Printf(@"      formatting the output.\n");
+		Printf(@"  -t  Don't replace tabs with spaces.\n");
+		Printf(@"  -tl <NUM>\n");
+		Printf(@"      Use <NUM> spaces to replace a tab.\n");
 		Printf(@"\n");
 		Printf(@"Version %@\n", versionNumberStr());
 		Printf(@"Copyright (c) 2009-2010 Ali Rantakari, http://hasseg.org/\n");
@@ -127,6 +158,8 @@ int main(int argc, char *argv[])
 	NSString *providedPath = [[NSString stringWithUTF8String:argv[argc-1]] stringByStandardizingPath];
 	
 	BOOL arg_ansiEscapeFormat = YES;
+	BOOL arg_tabsToSpaces = YES;
+	NSUInteger arg_tabLength = 4;
 	
 	if (argc > 2)
 	{
@@ -135,6 +168,10 @@ int main(int argc, char *argv[])
 		{
 			if (strcmp(argv[i], "-f") == 0)
 				arg_ansiEscapeFormat = NO;
+			else if (strcmp(argv[i], "-t") == 0)
+				arg_tabsToSpaces = NO;
+			else if ((strcmp(argv[i], "-tl") == 0) && (i+1 < argc))
+				arg_tabLength = abs([[NSString stringWithCString:argv[i+1] encoding:NSUTF8StringEncoding] integerValue]);
 		}
 	}
 	
@@ -154,8 +191,12 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 	
+	NSMutableAttributedString *richSource = [[[NSMutableAttributedString alloc] initWithAttributedString:[as richTextSource]] autorelease];
+	
+	if (arg_tabsToSpaces)
+		replaceInMutableAttrStr(richSource, @"\t", ATTR_STR(WHITESPACE(arg_tabLength)));
+	
 	// print out the contents
-	NSAttributedString *richSource = [as richTextSource];
 	if (arg_ansiEscapeFormat)
 		Print([ansiEscapeHelper ansiEscapedStringWithAttributedString:richSource]);
 	else
