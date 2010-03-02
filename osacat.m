@@ -27,35 +27,13 @@ under the License.
 #import <libgen.h>
 #import "ANSIEscapeHelper.h"
 
-
-#define DEBUG_LEVEL 3
-
-#define DEBUG_ERROR   (DEBUG_LEVEL >= 1)
-#define DEBUG_WARN    (DEBUG_LEVEL >= 2)
-#define DEBUG_INFO    (DEBUG_LEVEL >= 3)
-#define DEBUG_VERBOSE (DEBUG_LEVEL >= 4)
-
-#define DDLogError(format, ...)		if(DEBUG_ERROR)   \
-										NSLog((format), ##__VA_ARGS__)
-#define DDLogWarn(format, ...)		if(DEBUG_WARN)    \
-										NSLog((format), ##__VA_ARGS__)
-#define DDLogInfo(format, ...)		if(DEBUG_INFO)    \
-										NSLog((format), ##__VA_ARGS__)
-#define DDLogVerbose(format, ...)	if(DEBUG_VERBOSE) \
-										NSLog((format), ##__VA_ARGS__)
-
-
-
 const int VERSION_MAJOR = 0;
 const int VERSION_MINOR = 5;
 const int VERSION_BUILD = 0;
 
 
 BOOL arg_verbose = NO;
-
 ANSIEscapeHelper *ansiEscapeHelper = nil;
-
-
 
 
 NSString* versionNumberStr()
@@ -63,15 +41,13 @@ NSString* versionNumberStr()
 	return [NSString stringWithFormat:@"%d.%d.%d", VERSION_MAJOR, VERSION_MINOR, VERSION_BUILD];
 }
 
-
-
-void HGPrint(NSString *aStr)
+void Print(NSString *aStr)
 {
 	[aStr writeToFile:@"/dev/stdout" atomically:NO encoding:NSUTF8StringEncoding error:NULL];
 }
 
-// other HGPrintf functions call this, and you call them
-void RealHGPrintf(NSString *aStr, va_list args)
+// other Printf functions call this, and you call them
+void RealPrintf(NSString *aStr, va_list args)
 {
 	NSString *str = [
 		[[NSString alloc]
@@ -84,25 +60,25 @@ void RealHGPrintf(NSString *aStr, va_list args)
 	[str writeToFile:@"/dev/stdout" atomically:NO encoding:NSUTF8StringEncoding error:NULL];
 }
 
-void VerboseHGPrintf(NSString *aStr, ...)
+void VerbosePrintf(NSString *aStr, ...)
 {
 	if (!arg_verbose)
 		return;
 	va_list argList;
 	va_start(argList, aStr);
-	RealHGPrintf(aStr, argList);
+	RealPrintf(aStr, argList);
 	va_end(argList);
 }
 
-void HGPrintf(NSString *aStr, ...)
+void Printf(NSString *aStr, ...)
 {
 	va_list argList;
 	va_start(argList, aStr);
-	RealHGPrintf(aStr, argList);
+	RealPrintf(aStr, argList);
 	va_end(argList);
 }
 
-void HGPrintfErr(NSString *aStr, ...)
+void PrintfErr(NSString *aStr, ...)
 {
 	va_list argList;
 	va_start(argList, aStr);
@@ -129,28 +105,26 @@ int main(int argc, char *argv[])
 	char *myBasename = basename(argv[0]);
 	if (argc == 1)
 	{
-		HGPrintf(@"usage: %s [options] <file>\n", myBasename);
-		HGPrintf(@"\n");
-		HGPrintf(@"  Prints out the contents of an AppleScript\n");
-		HGPrintf(@"  file.\n");
-		HGPrintf(@"\n");
-		HGPrintf(@" options:\n");
-		HGPrintf(@"\n");
-		HGPrintf(@"  -f  Don't use ANSI escape sequences for\n");
-		HGPrintf(@"      formatting the output.\n");
-		HGPrintf(@"\n");
-		HGPrintf(@"Version %@\n", versionNumberStr());
-		HGPrintf(@"Copyright (c) 2009-2010 Ali Rantakari, http://hasseg.org/\n");
-		HGPrintf(@"\n");
+		Printf(@"usage: %s [options] <file>\n", myBasename);
+		Printf(@"\n");
+		Printf(@"  Prints out the contents of an AppleScript\n");
+		Printf(@"  file.\n");
+		Printf(@"\n");
+		Printf(@" options:\n");
+		Printf(@"\n");
+		Printf(@"  -f  Don't use ANSI escape sequences for\n");
+		Printf(@"      formatting the output.\n");
+		Printf(@"\n");
+		Printf(@"Version %@\n", versionNumberStr());
+		Printf(@"Copyright (c) 2009-2010 Ali Rantakari, http://hasseg.org/\n");
+		Printf(@"\n");
 		exit(0);
 	}
 	
 	
 	ansiEscapeHelper = [[[ANSIEscapeHelper alloc] init] autorelease];
 	
-	
 	NSString *providedPath = [[NSString stringWithUTF8String:argv[argc-1]] stringByStandardizingPath];
-	
 	
 	BOOL arg_ansiEscapeFormat = YES;
 	
@@ -164,32 +138,30 @@ int main(int argc, char *argv[])
 		}
 	}
 	
-	
 	if (![[NSFileManager defaultManager] fileExistsAtPath:providedPath])
 	{
-		HGPrintfErr(@"Error: provided path does not exist:\n%s\n\n", [providedPath UTF8String]);
+		PrintfErr(@"Error: provided path does not exist:\n%s\n\n", [providedPath UTF8String]);
 		exit(1);
 	}
 	
-	
+	// read in the script file
 	NSURL *fileURL = [NSURL fileURLWithPath:providedPath];
 	NSDictionary *initErrorInfo = nil;
 	NSAppleScript *as = [[[NSAppleScript alloc] initWithContentsOfURL:fileURL error:&initErrorInfo] autorelease];
 	if (as == nil)
 	{
-		HGPrintfErr(@"Error loading file: %@", initErrorInfo);
+		PrintfErr(@"Error loading file: %@", initErrorInfo);
 		exit(1);
 	}
 	
 	// print out the contents
-	
 	NSAttributedString *richSource = [as richTextSource];
 	if (arg_ansiEscapeFormat)
-		HGPrint([ansiEscapeHelper ansiEscapedStringWithAttributedString:richSource]);
+		Print([ansiEscapeHelper ansiEscapedStringWithAttributedString:richSource]);
 	else
-		HGPrint([richSource string]);
+		Print([richSource string]);
 	
-	HGPrint(@"\n");
+	Print(@"\n");
 	
 	[autoReleasePool release];
 	exit(0);
