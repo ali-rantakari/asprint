@@ -1,13 +1,14 @@
-# osacat makefile
+# asprint makefile
 # 
 
 SHELL=/bin/bash
 
+CURRDATE=$(shell date +"%Y-%m-%d")
 SCP_TARGET=$(shell cat ./deploymentScpTarget)
-APP_VERSION=$(shell grep "^const int VERSION_" osacat.m | awk '{print $$NF}' | tr -d ';' | tr '\n' '.' | sed -e 's/.$$//')
-VERSION_ON_SERVER=$(shell curl -Ss http://hasseg.org/osacat/?versioncheck=y)
+APP_VERSION=$(shell grep "^const int VERSION_" asprint.m | awk '{print $$NF}' | tr -d ';' | tr '\n' '.' | sed -e 's/.$$//')
+VERSION_ON_SERVER=$(shell curl -Ss http://hasseg.org/asprint/?versioncheck=y)
 TEMP_DEPLOYMENT_DIR=deployment/$(APP_VERSION)
-TEMP_DEPLOYMENT_ZIPFILE=$(TEMP_DEPLOYMENT_DIR)/osacat-v$(APP_VERSION).zip
+TEMP_DEPLOYMENT_ZIPFILE=$(TEMP_DEPLOYMENT_DIR)/asprint-v$(APP_VERSION).zip
 TEMP_DEPLOYMENT_USAGEFILE="usage.txt"
 VERSIONCHANGELOGFILELOC="$(TEMP_DEPLOYMENT_DIR)/changelog.html"
 GENERALCHANGELOGFILELOC="changelog.html"
@@ -18,44 +19,53 @@ COMPILER="/Developer/usr/bin/clang"
 
 
 
-all: osacat
+all: asprint
 
-docs: usage.txt
+docs: asprint.1 usage.txt
 
 
-usage.txt: osacat
+usage.txt: asprint
 	@echo
 	@echo ---- generating usage.txt:
 	@echo ======================================
-	./osacat > usage.txt
+	./asprint > usage.txt
 
 
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
 # compile the binary itself
 #-------------------------------------------------------------------------
-osacat: osacat.m ANSIEscapeHelper.m
+asprint: asprint.m ANSIEscapeHelper.m
 	@echo
 	@echo ---- Compiling:
 	@echo ======================================
-	$(COMPILER) -O2 -Wall -force_cpusubtype_ALL -mmacosx-version-min=10.5 -arch i386 -arch ppc -framework Cocoa -o $@ osacat.m ANSIEscapeHelper.m
+	$(COMPILER) -O2 -Wall -force_cpusubtype_ALL -mmacosx-version-min=10.5 -arch i386 -arch ppc -framework Cocoa -o $@ asprint.m ANSIEscapeHelper.m
 
 
 
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+# generate main man page from POD syntax file
+#-------------------------------------------------------------------------
+asprint.1: asprint.pod
+	@echo
+	@echo ---- Generating manpage from POD file:
+	@echo ======================================
+	pod2man --section=1 --release=1.0 --center="asprint" --date="$(CURRDATE)" asprint.pod > asprint.1
 
 
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
 # make release package (prepare for deployment)
 #-------------------------------------------------------------------------
-package: osacat docs
+package: asprint docs
 	@echo
 	@echo ---- Preparing for deployment:
 	@echo ======================================
 	
 # create zip archive
 	mkdir -p $(TEMP_DEPLOYMENT_DIR)
-	echo "-D -j $(TEMP_DEPLOYMENT_ZIPFILE) osacat" | xargs zip
+	echo "-D -j $(TEMP_DEPLOYMENT_ZIPFILE) asprint" | xargs zip
 	cd "$(DEPLOYMENT_INCLUDES_DIR)"; echo "-g -R ../$(TEMP_DEPLOYMENT_ZIPFILE) *" | xargs zip
 	
 # if changelog doesn't already exist in the deployment dir
@@ -106,8 +116,9 @@ clean:
 	@echo
 	@echo ---- Cleaning up:
 	@echo ======================================
-	-rm -Rf osacat
+	-rm -Rf asprint
 	-rm -Rf usage.txt
+	-rm -Rf asprint.1
 
 
 

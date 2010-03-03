@@ -1,6 +1,6 @@
 /*
 
-osacat
+asprint
 --------------
 A Small command-line program that prints out the contents of a specified
 AppleScript file.
@@ -37,6 +37,7 @@ const int VERSION_MINOR = 5;
 const int VERSION_BUILD = 0;
 
 
+char *myBasename;
 BOOL arg_verbose = NO;
 ANSIEscapeHelper *ansiEscapeHelper = nil;
 
@@ -126,32 +127,37 @@ void replaceInMutableAttrStr(NSMutableAttributedString *str, NSString *searchStr
 }
 
 
+void printUsage()
+{
+	Printf(@"usage: %s [-fts] <file>\n", myBasename);
+	Printf(@"\n");
+	Printf(@"  Prints out the contents of a compiled AppleScript file\n");
+	Printf(@"  in color.\n");
+	Printf(@"\n");
+	Printf(@"  Options:\n");
+	Printf(@"\n");
+	Printf(@"  -f  Don't use ANSI escape sequences for\n");
+	Printf(@"      formatting the output.\n");
+	Printf(@"  -t  Don't replace tabs with spaces.\n");
+	Printf(@"  -s  <NUM>\n");
+	Printf(@"      Use <NUM> spaces to replace a tab.\n");
+	Printf(@"\n");
+	Printf(@"Version %@\n", versionNumberStr());
+	Printf(@"Copyright (c) 2009-2010 Ali Rantakari, http://hasseg.org/\n");
+	Printf(@"\n");
+}
 
 int main(int argc, char *argv[])
 {
 	NSAutoreleasePool *autoReleasePool = [[NSAutoreleasePool alloc] init];
 	
-	char *myBasename = basename(argv[0]);
+	myBasename = basename(argv[0]);
+	
 	if (argc == 1)
 	{
-		Printf(@"usage: %s [options] <file>\n", myBasename);
-		Printf(@"\n");
-		Printf(@"  Prints out the contents of an AppleScript file.\n");
-		Printf(@"\n");
-		Printf(@" options:\n");
-		Printf(@"\n");
-		Printf(@"  -f  Don't use ANSI escape sequences for\n");
-		Printf(@"      formatting the output.\n");
-		Printf(@"  -t  Don't replace tabs with spaces.\n");
-		Printf(@"  -tl <NUM>\n");
-		Printf(@"      Use <NUM> spaces to replace a tab.\n");
-		Printf(@"\n");
-		Printf(@"Version %@\n", versionNumberStr());
-		Printf(@"Copyright (c) 2009-2010 Ali Rantakari, http://hasseg.org/\n");
-		Printf(@"\n");
+		printUsage();
 		exit(0);
 	}
-	
 	
 	ansiEscapeHelper = [[[ANSIEscapeHelper alloc] init] autorelease];
 	
@@ -161,19 +167,24 @@ int main(int argc, char *argv[])
 	BOOL arg_tabsToSpaces = YES;
 	NSUInteger arg_tabLength = 4;
 	
-	if (argc > 2)
+	int opt;
+	while ((opt = getopt(argc, argv, "fts:")) != EOF)
 	{
-		int i;
-		for (i = 0; i < argc; i++)
+		switch (opt)
 		{
-			if (strcmp(argv[i], "-f") == 0)
-				arg_ansiEscapeFormat = NO;
-			else if (strcmp(argv[i], "-t") == 0)
-				arg_tabsToSpaces = NO;
-			else if ((strcmp(argv[i], "-tl") == 0) && (i+1 < argc))
-				arg_tabLength = abs([[NSString stringWithCString:argv[i+1] encoding:NSUTF8StringEncoding] integerValue]);
+			case 'f':	arg_ansiEscapeFormat = NO;
+				break;
+			case 't':	arg_tabsToSpaces = NO;
+				break;
+			case 's':	arg_tabLength = (NSUInteger)abs(atoi(optarg));
+				break;
+			case '?':
+			default:
+				printUsage();
+				exit(1);
 		}
 	}
+	
 	
 	if (![[NSFileManager defaultManager] fileExistsAtPath:providedPath])
 	{
