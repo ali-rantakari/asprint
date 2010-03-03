@@ -28,7 +28,7 @@ echo
 echo "This script will install:"
 echo
 printf "asprint executable to: \e[36m${BINDIR}\e[m\n"
-printf "man pages (asprint, asprintConfig, asprintLocalization) to: \e[36m${MANDIR}\e[m\n"
+printf "asprint man page to: \e[36m${MANDIR}\e[m\n"
 echo
 echo $'We\'ll need administrator rights to install to these locations so \e[33mplease enter your admin password when asked\e[m.'
 echo $'\e[1mPress any key to continue installing or Ctrl-C to cancel.\e[m'
