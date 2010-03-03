@@ -1,0 +1,44 @@
+=head1 NAME
+
+B<asprint> -- print contents of compiled AppleScript files in color
+
+
+=head1 SYNOPSIS
+
+=over 10
+
+=item B<asprint>
+
+[B<-ft>] [B<-s> I<num>] I<file>
+
+=back
+
+=head1 DESCRIPTION
+
+B<asprint> prints out the contents of a compiled AppleScript file in color.
+
+The options are as follows:
+
+=over 12
+
+=item B<-f>
+
+Don't use ANSI escape sequences for formatting the output (i.e. no colors or any other formatting).
+
+=item B<-t>
+
+Don't replace tabs with spaces (by default, tabs are replaced with 4 spaces).
+
+=item B<-s> I<num>
+
+Replace tabs with I<num> number of spaces.
+
+
+=head1 SEE ALSO
+
+osadecompile(1)
+
+=head1 AUTHORS
+
+This man page has been written by Ali Rantakari (http://hasseg.org)
+

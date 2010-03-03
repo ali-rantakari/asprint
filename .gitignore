@@ -1,5 +1,7 @@
 asprint
+asprint.1
 usage.txt
 deploymentScpTarget
 deployment/*
 asprint.plist
+*.scpt
