@@ -14,7 +14,7 @@ VERSIONCHANGELOGFILELOC="$(TEMP_DEPLOYMENT_DIR)/changelog.html"
 GENERALCHANGELOGFILELOC="changelog.html"
 SCP_TARGET=$(shell cat ./deploymentScpTarget)
 DEPLOYMENT_INCLUDES_DIR="./deployment-files"
-COMPILER="/Developer/usr/bin/clang"
+COMPILER="clang"
 #COMPILER="gcc"
 
 
@@ -39,7 +39,7 @@ asprint: asprint.m ANSIEscapeHelper.m
 	@echo
 	@echo ---- Compiling:
 	@echo ======================================
-	$(COMPILER) -O2 -Wall -force_cpusubtype_ALL -mmacosx-version-min=10.5 -arch i386 -arch ppc -framework Cocoa -o $@ asprint.m ANSIEscapeHelper.m
+	$(COMPILER) -O2 -Wall -force_cpusubtype_ALL -mmacosx-version-min=10.5 -arch i386 -framework Cocoa -o $@ asprint.m ANSIEscapeHelper.m
 
 
 
